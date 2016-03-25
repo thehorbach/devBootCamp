@@ -18,6 +18,12 @@ class LocationVC: UIViewController, UITableViewDataSource, UITableViewDelegate, 
     
     let locationManager = CLLocationManager()
     
+    //Lets pretend we downloaded this from the server
+    let addresses = [
+        "20433 Vía San Marino Cupertino, CA 95014",
+        "20650 Homestead Rd, Cupertino, CA 95014",
+        "11010 N De Anza Blvd, Cupertino, CA 95014"
+    ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +32,10 @@ class LocationVC: UIViewController, UITableViewDataSource, UITableViewDelegate, 
         
         tableView.delegate = self
         tableView.dataSource = self
+        
+        for add in addresses {
+            getPlaceMarkFromAddress(add)
+        }
         
     }
     
@@ -62,10 +72,63 @@ class LocationVC: UIViewController, UITableViewDataSource, UITableViewDelegate, 
         map.setRegion(coordinateRegion, animated: true)
     }
     
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+        if annotation.isKindOfClass(BootcampAnnotation) {
+            let annoView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "Default")
+            annoView.pinTintColor = UIColor.blueColor()
+            annoView.animatesDrop = true
+            return annoView
+        } else if annotation.isKindOfClass(MKUserLocation) {
+            return nil
+        }
+        
+        return nil
+    }
+    
     func mapView(mapView: MKMapView, didUpdateUserLocation userLocation: MKUserLocation) {
         if let loc = userLocation.location {
             centerMapOnLocation(loc)
         }
     }
+    
+    func createAnnotationForLocation(location: CLLocation) {
+        let bootcamp = BootcampAnnotation(coordinate: location.coordinate)
+        map.addAnnotation(bootcamp)
+    }
+    
+    func getPlaceMarkFromAddress(address: String) {
+        CLGeocoder().geocodeAddressString(address) { (placemarks: [CLPlacemark]?, error: NSError?) in
+            if let marks = placemarks where marks.count > 0 {
+                if let loc = marks[0].location {
+                    //we have a valid location with coordinates
+                    self.createAnnotationForLocation(loc)
+                }
+            }
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
